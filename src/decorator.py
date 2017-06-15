@@ -39,6 +39,7 @@ import inspect
 import operator
 import itertools
 import collections
+import types
 
 __version__ = '4.0.11'
 
@@ -199,6 +200,17 @@ class FunctionMaker(object):
             print(src, file=sys.stderr)
             raise
         func = evaldict[name]
+
+        # Try to preserve funtion filename and line number
+        try:
+            wrapped_func = attrs['__wrapped__']
+            func.func_code = types.CodeType(func.func_code.co_argcount, func.func_code.co_nlocals, func.func_code.co_stacksize,
+                                            func.func_code.co_flags | 0x0040, func.func_code.co_code, func.func_code.co_consts,
+                                            func.func_code.co_names, func.func_code.co_varnames, wrapped_func.func_code.co_filename, func.func_code.co_name,
+                                            wrapped_func.func_code.co_firstlineno, func.func_code.co_lnotab, func.func_code.co_freevars, func.func_code.co_cellvars)
+        except:
+            pass
+
         if addsource:
             attrs['__source__'] = src
         self.update(func, **attrs)
